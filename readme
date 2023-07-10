@@ -1,0 +1,72 @@
+pfc_optogenetics
+
+This project investigates the effect of sharp-wave ripple triggered mPFC inhibition on learning a spatial alternation task
+
+
+1. Store data
+
+Folder structure:
+    Folders should be structured as follows:
+        'top folder'/'animal name'/'date'/
+
+Raw data:
+    -event.nev (containing the strings 'start run 1','end run 1','start rest 1',etc)  
+    -VT1.nvt (tracking of LED's)
+    -VT1.mpg (video with behavior)  
+    -VT1.smi (time subtitles in video)
+    -CheetahLogFile.txt (details about recording)
+    -DataProcessingErrors.nde (log of potential errors during data aquisition)  
+    -*ncs files (neural data from tetrodes)
+
+meta data:
+    Manually add information about each animal
+    config.yaml - contains the meta information for each animal. Should contain at least:
+    
+    B5: (animal name)
+      topfolder: (folder where the data is stored, e.g.:) '/mnt/fk-fileserver/Project_PFC_optogenetics/'
+      Alldates: (recording dates, e.g.:) ['2021-09-10_10-30-11','2021-09-11_18-53-36'] 
+      Allsessiontypes: (type of session, e.g.:) ['Initial','Initial_Restday1']
+      Stimulation: (stimulation applied per session (length=length of Alldates, 'None','On-time',or 'Delayed') ['None','None']
+      channames_ripples: (channel names on which to detect swrs)
+      channames_cortex: (channel names of channels in the cortex)
+      Threshold: (threshold for swr detection (median+MAD) [7]
+      Sequences: (sequence in the order 'L','C','R'; if arm 1 was in the center, the sequence is 2,1,3)
+      fs: (the sampling frequency of the data) 4000
+
+2. Pre-processing
+
+2.1 extract rest and run times
+    rest and run times are indicated by the experimenter during recordings and can be found in event.nev
+    run 'creating_infoyaml.py' to extract those times and save them in a yaml file
+
+2.2 position data
+    Follow the steps in 'DLC_makeanalysis_json.py'
+        label data
+        train the network
+        evaluate the network
+        analyze all videos
+        add a datafile line to info.yaml to use the DLC output in localize
+            run localize and clean position data if necessary
+
+2.2 maze data
+    run Amaze to indicate where the maze arms and platforms were; indicate track, P1, P2, P3 and Center
+        save as 'top folder'/'animal name'/'date'/epochs/maze.yaml
+        
+2.3 save sequence data
+    run 'save trials_data_ripples.py'
+        the first cell will create a folder structure for the output of the analyses
+        then save the trial times of rest and run periods to an hdf5 file (run is taken from info.yaml, rest from event.nev)
+        then extract sequences of visits based on the saved position and maze data
+        then extract the neural data from the hippocampus and detect SWRs
+
+3. Data analysis
+    SWR_characterization.py (chachterization of offline detected SWRs; Fig 2)
+    create_ripple_envelope_Nostim.py (save the envelopes of offline detected SWRs; Fig 2)
+    combined_learningcurves.py (Get the animals learning curves; Figs 3 and 4, Supplemental Fig S2)
+    correlation_lighton_performance.py (Get the correlation between the percent of time the lights were on vs the performanve of the animals; Fig 5)
+      
+    
+    Plot_trace_runningspeed.py (plot examples of detections + the animals running speed; Supplemental Fig S1)
+    VTE.py (look at VTE-like behaviors; Supplemental Fig S4)
+    time-to-next-detection.py (histograms of detections; Supplemental Fig S5)
+
